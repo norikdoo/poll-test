@@ -48,7 +48,7 @@ int main(int argc, char **argv)
         }
     }
 
-    if (*sysfs_notify == 0)
+    if (sysfs_notify == NULL)
     {
         perror("You must give filename in order to poll! Exiting...");
         exit(1);
