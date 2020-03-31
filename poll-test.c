@@ -4,6 +4,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <poll.h>
@@ -15,9 +16,9 @@
 int main(int argc, char **argv)
 {
 	int cnt, notify_fd, rv, opt, timeout, mask, loop;
-	char attrData[DEFAULT_READ_SIZE];
+	char data[DEFAULT_READ_SIZE];
 	struct pollfd ufds[1];
-	char *sysfs_notify;
+	char *filename;
 	loop = 0;
 	timeout = -1;
 	mask = -1;
@@ -28,7 +29,7 @@ int main(int argc, char **argv)
 		{
 		case 'f':
 			printf("ARG filename: %s\n", optarg);
-			sysfs_notify = strdup(optarg);
+			filename = strdup(optarg);
 			break;
 		case 't':
 			printf("ARG timeout: %s\n", optarg);
@@ -48,10 +49,10 @@ int main(int argc, char **argv)
 		}
 	}
 
-	if (sysfs_notify == NULL)
+	if (filename == NULL)
 	{
 		perror("You must give filename in order to poll! Exiting...");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	if (timeout == -1)
@@ -66,20 +67,20 @@ int main(int argc, char **argv)
 		mask = DEFAULT_EVENTS_MASK;
 	}
 
-	printf("Filename: %s\nTimeout: %d\nMask: %x\nLoop: %d\n", sysfs_notify, timeout, mask, loop);
+	printf("Filename: %s\nTimeout: %d\nMask: %x\nLoop: %d\n", filename, timeout, mask, loop);
 
 	do
 	{
-		if ((notify_fd = open(sysfs_notify, O_RDWR)) < 0)
+		if ((notify_fd = open(filename, O_RDWR)) < 0)
 		{
 			perror("Unable to open notify");
-			exit(1);
+			exit(EXIT_FAILURE);
 		}
 
 		ufds[0].fd = notify_fd;
 		ufds[0].events = mask;
 
-		cnt = read(notify_fd, attrData, DEFAULT_READ_SIZE);
+		cnt = read(notify_fd, data, DEFAULT_READ_SIZE);
 		ufds[0].revents = 0;
 
 		if ((rv = poll(ufds, 1, timeout)) < 0)
