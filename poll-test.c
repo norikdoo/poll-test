@@ -8,14 +8,14 @@
 #include <sys/stat.h>
 #include <poll.h>
 
-#define ATTR_SIZE 100
-#define DEFAULT_TIMEOUT 1000000
-#define DEFAULT_EVENTS_MASK POLLPRI|POLLERR
+#define DEFAULT_READ_SIZE   (128)
+#define DEFAULT_TIMEOUT     (-1)
+#define DEFAULT_EVENTS_MASK (POLLPRI|POLLIN|POLLOUT|POLLERR)
 
 int main(int argc, char **argv)
 {
 	int cnt, notify_fd, rv, opt, timeout, mask, loop;
-	char attrData[ATTR_SIZE];
+	char attrData[DEFAULT_READ_SIZE];
 	struct pollfd ufds[1];
 	char *sysfs_notify;
 	loop = 0;
@@ -79,7 +79,7 @@ int main(int argc, char **argv)
 		ufds[0].fd = notify_fd;
 		ufds[0].events = mask;
 
-		cnt = read(notify_fd, attrData, ATTR_SIZE);
+		cnt = read(notify_fd, attrData, DEFAULT_READ_SIZE);
 		ufds[0].revents = 0;
 
 		if ((rv = poll(ufds, 1, timeout)) < 0)
