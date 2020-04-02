@@ -10,7 +10,7 @@
 #include <poll.h>
 
 #ifdef DEBUG
-#define DBG(...) do { fprintf(stderr, "[DEBUG]: "__VA_ARGS__); } while(0)
+#define DBG(...) do { fprintf(stdout, "[DEBUG]: "__VA_ARGS__); } while(0)
 #else
 #define DBG(...) do { } while (0)
 #endif
