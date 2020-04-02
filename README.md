@@ -11,7 +11,12 @@ make
 ## Usage
 
 ```shell
-poll-test -f filename
+usage: poll-test [-f file]
+        [-m POLLMASK]
+        [-o FOPEN_FLAGS]
+        [-t timeout]
+        [-l] [-i] [-e] [-w]
+        [-h]
 ```
 
 ## License

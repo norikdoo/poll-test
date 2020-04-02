@@ -1,3 +1,9 @@
+// SPDX-License-Identifier: MIT
+/*
+ * Copyright (C) 2020 Norik systems d.o.o.
+ * Authors: Primoz Fiser <primoz.fiser@norik.com>
+ *          Luka Zlatecan <luka.zlatecan@norik.com>
+ */
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -22,6 +28,8 @@
 #define DEFAULT_TIMEOUT     (-1)
 #define DEFAULT_EVENTS_MASK (POLLIN|POLLOUT)
 #define DEFAULT_FILE_FLAGS  (O_RDWR)
+
+char *prompt;
 
 struct poll_event {
 	int number;
@@ -162,6 +170,20 @@ int parse_poll_revents_to_string(int revents, char *output)
 	return 0;
 }
 
+int usage(void)
+{
+    fprintf(stderr, "usage: %s %s%s%s%s%s%s\n",
+		prompt,
+		"[-f file]",
+		"\n\t[-m POLLMASK]",
+		"\n\t[-o FOPEN_FLAGS]",
+		"\n\t[-t timeout]",
+		"\n\t[-l] [-i] [-e] [-w]",
+		"\n\t[-h]"
+	);
+	exit(EXIT_FAILURE);
+}
+
 int main(int argc, char **argv)
 {
 	char data[DEFAULT_READ_SIZE];
@@ -173,7 +195,12 @@ int main(int argc, char **argv)
 	int file_flags = -1;
 	int loop_mode = 0;
 
-	while ((opt = getopt(argc, argv, "f:m:o:t:liew")) != -1)
+	if ((prompt = strrchr(argv[0], '/')) != NULL)
+		++prompt;
+	else
+		prompt = argv[0];
+
+	while ((opt = getopt(argc, argv, "f:m:o:t:liewh")) != -1)
 	{
 		switch (opt)
 		{
@@ -209,17 +236,17 @@ int main(int argc, char **argv)
 			DBG("ARG: after poll() dummy write() ON\n");
 			write_after = 1;
 			break;
+		case 'h':
+			usage();
 		case '?':
 			ERROR("Unknown option switch -%c\n", optopt);
-			errno = EINVAL;
-			goto out;
+			usage();
 		}
 	}
 
 	if (filename == NULL) {
 		ERROR("No input file specified, use -f switch\n");
-		errno = EINVAL;
-		goto out;
+		usage();
 	}
 
 	if (file_flags == -1) {
