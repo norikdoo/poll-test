@@ -167,7 +167,7 @@ int main(int argc, char **argv)
 	char data[DEFAULT_READ_SIZE];
 	struct pollfd poll_fds[1];
 	char *filename = NULL;
-	int fd, opt, i, bytes, ret = -1, cnt = 0;
+	int fd, opt, bytes, ret = -1, i = 0;
 	int init_read = -1, read_after = -1, write_after = -1;
 	int poll_timeout = -1, poll_mask = -1;
 	int file_flags = -1;
@@ -251,6 +251,7 @@ int main(int argc, char **argv)
 	{
 		DBG("0x%08X -> %s\n", fopen_flags[i].number, fopen_flags[i].name);
 	}
+	i = 0;
 #endif
 	parse_poll_revents_to_string(poll_mask, data);
 
@@ -283,21 +284,21 @@ int main(int argc, char **argv)
 	do {
 		ret = poll(poll_fds, 1, poll_timeout);
 		if (ret == -1) {
-			ERROR("(%d) poll() error: %s\n", cnt, strerror(errno));
+			ERROR("(%d) poll() error: %s\n", i, strerror(errno));
 			goto out;
 		} else if (ret == 0) {
-			INFO("(%d) poll() timeout of %d msec reached...\n", cnt,
+			INFO("(%d) poll() timeout of %d msec reached...\n", i,
 				poll_timeout);
 		} else {
 			parse_poll_revents_to_string(poll_fds[0].revents, data);
-			INFO("(%d) poll() returned revents: 0x%04X -> %s\n", cnt,
+			INFO("(%d) poll() returned revents: 0x%04X -> %s\n", i,
 				poll_fds[0].revents, data);
 
 			/* We can do dummy read() if enabled */
 			if ((read_after != -1) && (poll_fds[0].revents &
 				(POLLIN|POLLPRI|POLLRDNORM|POLLRDBAND))) {
 
-				DBG("(%d) Executing dummy read() after poll()\n", cnt);
+				DBG("(%d) Executing dummy read() after poll()\n", i);
 
 				/* lseek() is needed before read() for sysfs attributes */
 				lseek(fd, 0, SEEK_SET);
@@ -309,7 +310,7 @@ int main(int argc, char **argv)
 				}
 
 				INFO("(%d) Dummy read() after poll() returns %d bytes\n",
-					cnt, bytes);
+					i, bytes);
 
 				/* Flush revents */
 				poll_fds[0].revents = 0;
@@ -319,7 +320,7 @@ int main(int argc, char **argv)
 			if ((write_after != -1) && (poll_fds[0].revents &
 				(POLLOUT|POLLWRNORM|POLLWRBAND))) {
 
-				DBG("(%d) Executing dummy write() after poll()\n", cnt);
+				DBG("(%d) Executing dummy write() after poll()\n", i);
 
 				/* lseek() is needed before write() for sysfs attributes */
 				lseek(fd, 0, SEEK_SET);
@@ -331,7 +332,7 @@ int main(int argc, char **argv)
 				}
 
 				INFO("(%d) Dummy write() after poll() returns %d bytes\n",
-					cnt, bytes);
+					i, bytes);
 
 				/* Flush revents */
 				poll_fds[0].revents = 0;
@@ -340,10 +341,10 @@ int main(int argc, char **argv)
 			/* File errors & status */
 			if (poll_fds[0].revents & (POLLERR|POLLHUP|POLLNVAL)) {
 				WARN("(%d) Filedescriptor reports errors after poll()...\n",
-					cnt);
+					i);
 			}
 		}
-		cnt++;
+		i++;
 	} while (loop_mode);
 
 out:
