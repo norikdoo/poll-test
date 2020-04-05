@@ -71,15 +71,25 @@ int parse_optarg_file_flags(char *str)
 {
 	char sep[] = " ,;:|";
 	char *token;
-	int flag = 0;
+	int flag = -1;
+	int temp = 0;
 	int i;
 
 	DBG("%s(): input string = %s\n", __func__, str);
 
 	/* Allow to specify fopen_flag as hex value */
 	sscanf(str, "%x", &flag);
-	if (flag != 0)
+	DBG("%s(): flag = %d\n", __func__, flag);
+
+	if (flag >= 0) {
+		for (i = 0; i < sizeof(fopen_flags) / sizeof(struct fopen_flag); ++i) {
+			if (fopen_flags[i].number == flag)
+				goto out;
+		}
+		WARN("File open flag 0x%08X not officially supported!\n", flag);
 		goto out;
+	} else
+		flag = -1;
 
 	token = strtok(str, sep);
 	while (token != NULL)
@@ -87,17 +97,12 @@ int parse_optarg_file_flags(char *str)
 		for (i = 0; i < sizeof(fopen_flags) / sizeof(struct fopen_flag); ++i)
 		{
 			if (!strcmp(token, fopen_flags[i].name)) {
-				flag |= fopen_flags[i].number;
+				temp |= fopen_flags[i].number;
+				flag = temp;
 				DBG("%s(): 0x%08X -> %s == %s\n", __func__,
 					fopen_flags[i].number, fopen_flags[i].name, token);
 			}
 		}
-#if 0
-		if (!flag) {
-			WARN("Unknown file flag: %s\n", token);
-			return -1;
-		}
-#endif
 		token = strtok(NULL, sep);
 	}
 out:
@@ -109,15 +114,25 @@ int parse_optarg_poll_mask(char *str)
 {
 	char sep[] = " ,;:|";
 	char *token;
-	int mask = 0;
+	int mask = -1;
+	int temp = 0;
 	int i;
 
 	DBG("%s(): input string = %s\n", __func__, str);
 
 	/* Allow to specify poll_mask as hex value */
 	sscanf(str, "%x", &mask);
-	if (mask != 0)
+	DBG("%s(): mask = %d\n", __func__, mask);
+
+	if (mask > 0) {
+		for (i = 0; i < sizeof(poll_events) / sizeof(struct poll_event); ++i) {
+			if (poll_events[i].number == mask)
+				goto out;
+		}
+		WARN("Poll mask 0x%04X not officially supported!\n", mask);
 		goto out;
+	} else
+		mask = -1;
 
 	token = strtok(str, sep);
 	while (token != NULL)
@@ -125,17 +140,12 @@ int parse_optarg_poll_mask(char *str)
 		for (i = 0; i < sizeof(poll_events) / sizeof(struct poll_event); ++i)
 		{
 			if (!strcmp(token, poll_events[i].name)) {
-				mask |= poll_events[i].number;
+				temp |= poll_events[i].number;
+				mask = temp;
 				DBG("%s(): 0x%04X -> %s == %s\n", __func__,
 					poll_events[i].number, poll_events[i].name, token);
 			}
 		}
-#if 0
-		if (!mask) {
-			WARN("Unknown poll mask: %s\n", token);
-			return -1;
-		}
-#endif
 		token = strtok(NULL, sep);
 	}
 out:
