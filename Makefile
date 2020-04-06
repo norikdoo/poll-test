@@ -6,7 +6,7 @@ CC = $(CROSS_COMPILE)gcc
 CFLAGS = -g -Wall
 
 # linker flags
-LDFLAGS = 
+#LDFLAGS = -static
 
 # target
 TARGET = poll-test
